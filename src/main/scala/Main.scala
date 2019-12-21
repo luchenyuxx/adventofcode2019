@@ -1,5 +1,11 @@
+import java.io.InputStream
+import java.util.concurrent.{BlockingQueue, Executors, LinkedTransferQueue, SynchronousQueue, TimeUnit}
+
+import scala.collection.mutable.ListBuffer
+import scala.concurrent.duration.Duration
+import scala.concurrent.{Await, ExecutionContext, Future, Promise}
 import scala.io.{Source, StdIn}
-import scala.util.{Success, Try}
+import scala.util.{Failure, Success, Try}
 
 object Day1 extends App {
 
@@ -236,4 +242,326 @@ object Day5 extends App {
   val inputFile = Source.fromFile("input5")
   val program = inputFile.getLines().flatMap(_.split(",").map(_.toInt))
   compute(program)
+}
+
+object Day6 extends App {
+  import collection.mutable
+  case class O(name: String, orbitedBy: mutable.ListBuffer[O]) {
+    var orbits: Option[O] = None
+  }
+  val os = mutable.Map[String, O]()
+  val inputs = Source.fromFile("input6").getLines()
+  for (i <- inputs) {
+    val x = i.split(')')
+    val o1 = os.getOrElseUpdate(x(0), O(x(0), mutable.ListBuffer()))
+    val o2 = os.getOrElseUpdate(x(1), O(x(1), mutable.ListBuffer()))
+    o1.orbitedBy += o2
+    o2.orbits = Some(o1)
+  }
+  def calculate(o: O, indirect: Int): Int = {
+    o.orbitedBy.map(x => calculate(x, indirect + 1)).sum + 1 + indirect
+  }
+  val r = os("COM").orbitedBy.map(x => calculate(x, 0)).sum
+  println(r)
+  def path(o: O): List[String] = {
+    o.orbits match {
+      case Some(x)=> path(x) :+ o.name
+      case None => List(o.name)
+    }
+  }
+  val p1 = path(os("YOU"))
+  val p2 = path(os("SAN"))
+  val r2 = p1.size + p2.size - 2 * p1.intersect(p2).size - 2
+  println(r2)
+}
+
+// not finished
+object Day7 extends App {
+  import util.control.Breaks._
+  import scala.collection.mutable
+
+  def compute(mutProgram: mutable.ListBuffer[Int])
+             (input: SynchronousQueue[Int], output: SynchronousQueue[Int]): ListBuffer[Int] = {
+    var pointer = 0
+    val outputs: ListBuffer[Int] = mutable.ListBuffer[Int]()
+    breakable {
+      while (pointer < mutProgram.size) {
+        val op = mutProgram(pointer)
+        op%100 match {
+          case 1 =>
+            val modP1 = op % 1000 / 100
+            val modP2 = op % 10000 / 1000
+            pointer += 1
+            val p1 = mutProgram(pointer)
+            pointer += 1
+            val p2 = mutProgram(pointer)
+            pointer += 1
+            val p3 = mutProgram(pointer)
+            val v1 = if(modP1 == 0) mutProgram(p1) else p1
+            val v2 = if(modP2 == 0) mutProgram(p2) else p2
+            mutProgram.update(p3, v1 + v2)
+            pointer += 1
+          case 2 =>
+            val modP1 = op % 1000 / 100
+            val modP2 = op % 10000 / 1000
+            pointer += 1
+            val p1 = mutProgram(pointer)
+            pointer += 1
+            val p2 = mutProgram(pointer)
+            pointer += 1
+            val p3 = mutProgram(pointer)
+            val v1 = if(modP1 == 0) mutProgram(p1) else p1
+            val v2 = if(modP2 == 0) mutProgram(p2) else p2
+            mutProgram.update(p3, v1 * v2)
+            pointer += 1
+          case 3 =>
+            pointer += 1
+            val p = mutProgram(pointer)
+            val v = input.take()
+            mutProgram.update(p, v)
+            pointer += 1
+          case 4 =>
+            pointer += 1
+            val p = mutProgram(pointer)
+            output.offer(mutProgram(p), 3, TimeUnit.SECONDS)
+            outputs += mutProgram(p)
+            pointer += 1
+          case 5 =>
+            val modP1 = op % 1000 / 100
+            val modP2 = op % 10000 / 1000
+            pointer += 1
+            val p1 = mutProgram(pointer)
+            pointer += 1
+            val p2 = mutProgram(pointer)
+            val v1 = if(modP1 == 0) mutProgram(p1) else p1
+            val v2 = if(modP2 == 0) mutProgram(p2) else p2
+            if (v1 != 0)
+              pointer = v2
+            else pointer += 1
+          case 6 =>
+            val modP1 = op % 1000 / 100
+            val modP2 = op % 10000 / 1000
+            pointer += 1
+            val p1 = mutProgram(pointer)
+            pointer += 1
+            val p2 = mutProgram(pointer)
+            val v1 = if(modP1 == 0) mutProgram(p1) else p1
+            val v2 = if(modP2 == 0) mutProgram(p2) else p2
+            if (v1 == 0) pointer = v2
+            else pointer += 1
+          case 7 =>
+            val modP1 = op % 1000 / 100
+            val modP2 = op % 10000 / 1000
+            pointer += 1
+            val p1 = mutProgram(pointer)
+            pointer += 1
+            val p2 = mutProgram(pointer)
+            pointer += 1
+            val p3 = mutProgram(pointer)
+            val v1 = if(modP1 == 0) mutProgram(p1) else p1
+            val v2 = if(modP2 == 0) mutProgram(p2) else p2
+            if(v1 < v2) mutProgram.update(p3, 1)
+            else mutProgram.update(p3, 0)
+            pointer += 1
+          case 8 =>
+            val modP1 = op % 1000 / 100
+            val modP2 = op % 10000 / 1000
+            pointer += 1
+            val p1 = mutProgram(pointer)
+            pointer += 1
+            val p2 = mutProgram(pointer)
+            pointer += 1
+            val p3 = mutProgram(pointer)
+            val v1 = if(modP1 == 0) mutProgram(p1) else p1
+            val v2 = if(modP2 == 0) mutProgram(p2) else p2
+            if(v1 == v2) mutProgram.update(p3, 1)
+            else mutProgram.update(p3, 0)
+            pointer += 1
+          case 99 =>
+            break
+        }
+      }
+    }
+
+    outputs
+  }
+
+  import scala.concurrent.duration._
+  val inputFile = Source.fromFile("input7")
+  val pool = Executors.newFixedThreadPool(6)
+  implicit val ec = ExecutionContext.fromExecutor(pool)
+  val program = inputFile.getLines().flatMap(_.split(",").map(_.toInt)).toList
+  val a = (5 to 9).permutations.toList
+  def amplify(phazes: Seq[Int]): Int = {
+    val amps = (1 to 5).map(_ => compute(mutable.ListBuffer.from(program))(_, _))
+    // initialize the program with phase
+    val inputOutput = (0 to 4).map{_ =>
+      new SynchronousQueue[Int]()
+    }
+    val futures = amps.zipWithIndex.map { case (amp, i) =>
+      val f = Future(amp(inputOutput(i), inputOutput((i + 1)%5)))
+      f.onComplete {
+        case Success(t) => t
+        case Failure(e) => throw e
+      }
+      f
+    }
+    inputOutput.zipWithIndex.foreach { case(io, idx) =>
+      io.put(phazes(idx))
+    }
+    inputOutput(0).put(0)
+    val l = Await.result(futures.last, 1.minute)
+    l.max
+  }
+
+  println(a.map(amplify).max)
+//  println(amplify(List(9, 8, 7, 6, 5)))
+}
+
+object Day8 extends App {
+  val input = Source.fromFile("input8").getLines().toList.head
+  val width = 25
+  val height = 6
+  val layers = input.grouped(width * height).toList
+  val minLayer = layers.map(l => (l.count(_ == '0'), l))
+    .minBy(_._1)._2
+  println(minLayer.count(_ == '1') * minLayer.count(_ == '2'))
+  def merge(a: String, b: String): String = {
+    a.zipWithIndex.map{
+      case (c, idx) => c match {
+        case '2' => b(idx)
+        case _ => c
+      }
+    }.mkString
+  }
+  val image = layers.reduceLeft(merge).map(c => c match {
+    case '0' => ' '
+    case '1' => '#'
+  })
+  image.grouped(width).foreach(println)
+}
+
+object Day9 extends App {
+  import util.control.Breaks._
+  import scala.collection.mutable
+
+  def compute(mutProgram: mutable.ListBuffer[BigInt])
+             (input: SynchronousQueue[BigInt], output: SynchronousQueue[BigInt]): ListBuffer[BigInt] = {
+    var pointer = 0
+    var relativeBase = 0
+    val outputs: ListBuffer[BigInt] = mutable.ListBuffer[BigInt]()
+    def getParamValue(param: BigInt, mode: BigInt): BigInt = {
+      mode match {
+        case 0 => mutProgram(param)
+        case 1 => param
+        case 2 => mutProgram(relativeBase + param)
+      }
+    }
+    breakable {
+      while (pointer < mutProgram.size) {
+        val op = mutProgram(pointer)
+        op%100 match {
+          case 1 =>
+            val modP1 = op % 1000 / 100
+            val modP2 = op % 10000 / 1000
+            pointer += 1
+            val p1 = mutProgram(pointer)
+            pointer += 1
+            val p2 = mutProgram(pointer)
+            pointer += 1
+            val p3 = mutProgram(pointer)
+            val v1 = getParamValue(p1, modP1)
+            val v2 = getParamValue(p2, modP2)
+            mutProgram.update(p3, v1 + v2)
+            pointer += 1
+          case 2 =>
+            val modP1 = op % 1000 / 100
+            val modP2 = op % 10000 / 1000
+            pointer += 1
+            val p1 = mutProgram(pointer)
+            pointer += 1
+            val p2 = mutProgram(pointer)
+            pointer += 1
+            val p3 = mutProgram(pointer)
+            val v1 = getParamValue(p1, modP1)
+            val v2 = getParamValue(p2, modP2)
+            mutProgram.update(p3, v1 * v2)
+            pointer += 1
+          case 3 =>
+            pointer += 1
+            val p = mutProgram(pointer)
+            val v = input.take()
+            mutProgram.update(p, v)
+            pointer += 1
+          case 4 =>
+            pointer += 1
+            val p = mutProgram(pointer)
+            output.offer(mutProgram(p), 3, TimeUnit.SECONDS)
+            outputs += mutProgram(p)
+            pointer += 1
+          case 5 =>
+            val modP1 = op % 1000 / 100
+            val modP2 = op % 10000 / 1000
+            pointer += 1
+            val p1 = mutProgram(pointer)
+            pointer += 1
+            val p2 = mutProgram(pointer)
+            val v1 = getParamValue(p1, modP1)
+            val v2 = getParamValue(p2, modP2)
+            if (v1 != 0)
+              pointer = v2
+            else pointer += 1
+          case 6 =>
+            val modP1 = op % 1000 / 100
+            val modP2 = op % 10000 / 1000
+            pointer += 1
+            val p1 = mutProgram(pointer)
+            pointer += 1
+            val p2 = mutProgram(pointer)
+            val v1 = getParamValue(p1, modP1)
+            val v2 = getParamValue(p2, modP2)
+            if (v1 == 0) pointer = v2
+            else pointer += 1
+          case 7 =>
+            val modP1 = op % 1000 / 100
+            val modP2 = op % 10000 / 1000
+            pointer += 1
+            val p1 = mutProgram(pointer)
+            pointer += 1
+            val p2 = mutProgram(pointer)
+            pointer += 1
+            val p3 = mutProgram(pointer)
+            val v1 = getParamValue(p1, modP1)
+            val v2 = getParamValue(p2, modP2)
+            if(v1 < v2) mutProgram.update(p3, 1)
+            else mutProgram.update(p3, 0)
+            pointer += 1
+          case 8 =>
+            val modP1 = op % 1000 / 100
+            val modP2 = op % 10000 / 1000
+            pointer += 1
+            val p1 = mutProgram(pointer)
+            pointer += 1
+            val p2 = mutProgram(pointer)
+            pointer += 1
+            val p3 = mutProgram(pointer)
+            val v1 = getParamValue(p1, modP1)
+            val v2 = getParamValue(p2, modP2)
+            if(v1 == v2) mutProgram.update(p3, 1)
+            else mutProgram.update(p3, 0)
+            pointer += 1
+          case 9 =>
+            val modP1 = op % 1000 / 100
+            pointer += 1
+            val p1 = mutProgram(pointer)
+            relativeBase += getParamValue(p1, modP1)
+            pointer += 1
+          case 99 =>
+            break
+        }
+      }
+    }
+
+    outputs
+  }
 }
