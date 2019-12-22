@@ -134,6 +134,7 @@ object Day4 extends App {
 }
 
 object Day5 extends App {
+
   import util.control.Breaks._
 
   def compute(program: Iterator[Int]): Unit = {
@@ -142,7 +143,7 @@ object Day5 extends App {
     breakable {
       while (pointer < mutProgram.size) {
         val op = mutProgram(pointer)
-        op%100 match {
+        op % 100 match {
           case 1 =>
             val modP1 = op % 1000 / 100
             val modP2 = op % 10000 / 1000
@@ -152,8 +153,8 @@ object Day5 extends App {
             val p2 = mutProgram(pointer)
             pointer += 1
             val p3 = mutProgram(pointer)
-            val v1 = if(modP1 == 0) mutProgram(p1) else p1
-            val v2 = if(modP2 == 0) mutProgram(p2) else p2
+            val v1 = if (modP1 == 0) mutProgram(p1) else p1
+            val v2 = if (modP2 == 0) mutProgram(p2) else p2
             mutProgram.update(p3, v1 + v2)
             pointer += 1
           case 2 =>
@@ -165,8 +166,8 @@ object Day5 extends App {
             val p2 = mutProgram(pointer)
             pointer += 1
             val p3 = mutProgram(pointer)
-            val v1 = if(modP1 == 0) mutProgram(p1) else p1
-            val v2 = if(modP2 == 0) mutProgram(p2) else p2
+            val v1 = if (modP1 == 0) mutProgram(p1) else p1
+            val v2 = if (modP2 == 0) mutProgram(p2) else p2
             mutProgram.update(p3, v1 * v2)
             pointer += 1
           case 3 =>
@@ -188,8 +189,8 @@ object Day5 extends App {
             val p1 = mutProgram(pointer)
             pointer += 1
             val p2 = mutProgram(pointer)
-            val v1 = if(modP1 == 0) mutProgram(p1) else p1
-            val v2 = if(modP2 == 0) mutProgram(p2) else p2
+            val v1 = if (modP1 == 0) mutProgram(p1) else p1
+            val v2 = if (modP2 == 0) mutProgram(p2) else p2
             if (v1 != 0)
               pointer = v2
             else pointer += 1
@@ -200,8 +201,8 @@ object Day5 extends App {
             val p1 = mutProgram(pointer)
             pointer += 1
             val p2 = mutProgram(pointer)
-            val v1 = if(modP1 == 0) mutProgram(p1) else p1
-            val v2 = if(modP2 == 0) mutProgram(p2) else p2
+            val v1 = if (modP1 == 0) mutProgram(p1) else p1
+            val v2 = if (modP2 == 0) mutProgram(p2) else p2
             if (v1 == 0) pointer = v2
             else pointer += 1
           case 7 =>
@@ -213,9 +214,9 @@ object Day5 extends App {
             val p2 = mutProgram(pointer)
             pointer += 1
             val p3 = mutProgram(pointer)
-            val v1 = if(modP1 == 0) mutProgram(p1) else p1
-            val v2 = if(modP2 == 0) mutProgram(p2) else p2
-            if(v1 < v2) mutProgram.update(p3, 1)
+            val v1 = if (modP1 == 0) mutProgram(p1) else p1
+            val v2 = if (modP2 == 0) mutProgram(p2) else p2
+            if (v1 < v2) mutProgram.update(p3, 1)
             else mutProgram.update(p3, 0)
             pointer += 1
           case 8 =>
@@ -227,9 +228,9 @@ object Day5 extends App {
             val p2 = mutProgram(pointer)
             pointer += 1
             val p3 = mutProgram(pointer)
-            val v1 = if(modP1 == 0) mutProgram(p1) else p1
-            val v2 = if(modP2 == 0) mutProgram(p2) else p2
-            if(v1 == v2) mutProgram.update(p3, 1)
+            val v1 = if (modP1 == 0) mutProgram(p1) else p1
+            val v2 = if (modP2 == 0) mutProgram(p2) else p2
+            if (v1 == v2) mutProgram.update(p3, 1)
             else mutProgram.update(p3, 0)
             pointer += 1
           case 99 =>
@@ -245,10 +246,13 @@ object Day5 extends App {
 }
 
 object Day6 extends App {
+
   import collection.mutable
+
   case class O(name: String, orbitedBy: mutable.ListBuffer[O]) {
     var orbits: Option[O] = None
   }
+
   val os = mutable.Map[String, O]()
   val inputs = Source.fromFile("input6").getLines()
   for (i <- inputs) {
@@ -258,17 +262,21 @@ object Day6 extends App {
     o1.orbitedBy += o2
     o2.orbits = Some(o1)
   }
+
   def calculate(o: O, indirect: Int): Int = {
     o.orbitedBy.map(x => calculate(x, indirect + 1)).sum + 1 + indirect
   }
+
   val r = os("COM").orbitedBy.map(x => calculate(x, 0)).sum
   println(r)
+
   def path(o: O): List[String] = {
     o.orbits match {
-      case Some(x)=> path(x) :+ o.name
+      case Some(x) => path(x) :+ o.name
       case None => List(o.name)
     }
   }
+
   val p1 = path(os("YOU"))
   val p2 = path(os("SAN"))
   val r2 = p1.size + p2.size - 2 * p1.intersect(p2).size - 2
@@ -277,6 +285,7 @@ object Day6 extends App {
 
 // not finished
 object Day7 extends App {
+
   import util.control.Breaks._
   import scala.collection.mutable
 
@@ -287,7 +296,7 @@ object Day7 extends App {
     breakable {
       while (pointer < mutProgram.size) {
         val op = mutProgram(pointer)
-        op%100 match {
+        op % 100 match {
           case 1 =>
             val modP1 = op % 1000 / 100
             val modP2 = op % 10000 / 1000
@@ -297,8 +306,8 @@ object Day7 extends App {
             val p2 = mutProgram(pointer)
             pointer += 1
             val p3 = mutProgram(pointer)
-            val v1 = if(modP1 == 0) mutProgram(p1) else p1
-            val v2 = if(modP2 == 0) mutProgram(p2) else p2
+            val v1 = if (modP1 == 0) mutProgram(p1) else p1
+            val v2 = if (modP2 == 0) mutProgram(p2) else p2
             mutProgram.update(p3, v1 + v2)
             pointer += 1
           case 2 =>
@@ -310,8 +319,8 @@ object Day7 extends App {
             val p2 = mutProgram(pointer)
             pointer += 1
             val p3 = mutProgram(pointer)
-            val v1 = if(modP1 == 0) mutProgram(p1) else p1
-            val v2 = if(modP2 == 0) mutProgram(p2) else p2
+            val v1 = if (modP1 == 0) mutProgram(p1) else p1
+            val v2 = if (modP2 == 0) mutProgram(p2) else p2
             mutProgram.update(p3, v1 * v2)
             pointer += 1
           case 3 =>
@@ -333,8 +342,8 @@ object Day7 extends App {
             val p1 = mutProgram(pointer)
             pointer += 1
             val p2 = mutProgram(pointer)
-            val v1 = if(modP1 == 0) mutProgram(p1) else p1
-            val v2 = if(modP2 == 0) mutProgram(p2) else p2
+            val v1 = if (modP1 == 0) mutProgram(p1) else p1
+            val v2 = if (modP2 == 0) mutProgram(p2) else p2
             if (v1 != 0)
               pointer = v2
             else pointer += 1
@@ -345,8 +354,8 @@ object Day7 extends App {
             val p1 = mutProgram(pointer)
             pointer += 1
             val p2 = mutProgram(pointer)
-            val v1 = if(modP1 == 0) mutProgram(p1) else p1
-            val v2 = if(modP2 == 0) mutProgram(p2) else p2
+            val v1 = if (modP1 == 0) mutProgram(p1) else p1
+            val v2 = if (modP2 == 0) mutProgram(p2) else p2
             if (v1 == 0) pointer = v2
             else pointer += 1
           case 7 =>
@@ -358,9 +367,9 @@ object Day7 extends App {
             val p2 = mutProgram(pointer)
             pointer += 1
             val p3 = mutProgram(pointer)
-            val v1 = if(modP1 == 0) mutProgram(p1) else p1
-            val v2 = if(modP2 == 0) mutProgram(p2) else p2
-            if(v1 < v2) mutProgram.update(p3, 1)
+            val v1 = if (modP1 == 0) mutProgram(p1) else p1
+            val v2 = if (modP2 == 0) mutProgram(p2) else p2
+            if (v1 < v2) mutProgram.update(p3, 1)
             else mutProgram.update(p3, 0)
             pointer += 1
           case 8 =>
@@ -372,9 +381,9 @@ object Day7 extends App {
             val p2 = mutProgram(pointer)
             pointer += 1
             val p3 = mutProgram(pointer)
-            val v1 = if(modP1 == 0) mutProgram(p1) else p1
-            val v2 = if(modP2 == 0) mutProgram(p2) else p2
-            if(v1 == v2) mutProgram.update(p3, 1)
+            val v1 = if (modP1 == 0) mutProgram(p1) else p1
+            val v2 = if (modP2 == 0) mutProgram(p2) else p2
+            if (v1 == v2) mutProgram.update(p3, 1)
             else mutProgram.update(p3, 0)
             pointer += 1
           case 99 =>
@@ -387,26 +396,28 @@ object Day7 extends App {
   }
 
   import scala.concurrent.duration._
+
   val inputFile = Source.fromFile("input7")
   val pool = Executors.newFixedThreadPool(6)
   implicit val ec = ExecutionContext.fromExecutor(pool)
   val program = inputFile.getLines().flatMap(_.split(",").map(_.toInt)).toList
   val a = (5 to 9).permutations.toList
+
   def amplify(phazes: Seq[Int]): Int = {
     val amps = (1 to 5).map(_ => compute(mutable.ListBuffer.from(program))(_, _))
     // initialize the program with phase
-    val inputOutput = (0 to 4).map{_ =>
+    val inputOutput = (0 to 4).map { _ =>
       new SynchronousQueue[Int]()
     }
     val futures = amps.zipWithIndex.map { case (amp, i) =>
-      val f = Future(amp(inputOutput(i), inputOutput((i + 1)%5)))
+      val f = Future(amp(inputOutput(i), inputOutput((i + 1) % 5)))
       f.onComplete {
         case Success(t) => t
         case Failure(e) => throw e
       }
       f
     }
-    inputOutput.zipWithIndex.foreach { case(io, idx) =>
+    inputOutput.zipWithIndex.foreach { case (io, idx) =>
       io.put(phazes(idx))
     }
     inputOutput(0).put(0)
@@ -415,7 +426,7 @@ object Day7 extends App {
   }
 
   println(a.map(amplify).max)
-//  println(amplify(List(9, 8, 7, 6, 5)))
+  //  println(amplify(List(9, 8, 7, 6, 5)))
 }
 
 object Day8 extends App {
@@ -426,14 +437,16 @@ object Day8 extends App {
   val minLayer = layers.map(l => (l.count(_ == '0'), l))
     .minBy(_._1)._2
   println(minLayer.count(_ == '1') * minLayer.count(_ == '2'))
+
   def merge(a: String, b: String): String = {
-    a.zipWithIndex.map{
+    a.zipWithIndex.map {
       case (c, idx) => c match {
         case '2' => b(idx)
         case _ => c
       }
     }.mkString
   }
+
   val image = layers.reduceLeft(merge).map(c => c match {
     case '0' => ' '
     case '1' => '#'
@@ -442,6 +455,7 @@ object Day8 extends App {
 }
 
 object Day9 extends App {
+
   import util.control.Breaks._
   import scala.collection.mutable
 
@@ -450,6 +464,7 @@ object Day9 extends App {
     var pointer: BigInt = 0
     var relativeBase: BigInt = 0
     val outputs: ListBuffer[BigInt] = mutable.ListBuffer[BigInt]()
+
     def getParamValue(param: BigInt, mode: BigInt): BigInt = {
       mode.toInt match {
         case 0 => mutProgram.getOrElseUpdate(param, 0)
@@ -457,10 +472,11 @@ object Day9 extends App {
         case 2 => mutProgram.getOrElseUpdate(relativeBase + param, 0)
       }
     }
+
     breakable {
       while (true) {
         val op = mutProgram(pointer)
-        (op%100).toInt match {
+        (op % 100).toInt match {
           case 1 =>
             val modP1 = op % 1000 / 100
             val modP2 = op % 10000 / 1000
@@ -496,7 +512,7 @@ object Day9 extends App {
             pointer += 1
             val p = mutProgram(pointer)
             val i = input.take()
-//            val v = getParamValue(p, modP1)
+            //            val v = getParamValue(p, modP1)
             val updatePosition = if (modP1 == 2) p + relativeBase else p
             mutProgram.update(updatePosition, i)
             pointer += 1
@@ -504,9 +520,9 @@ object Day9 extends App {
             val modP1 = op % 1000 / 100
             pointer += 1
             val p = mutProgram(pointer)
-//            output.offer(mutProgram.getOrElseUpdate(p, 0), 3, TimeUnit.SECONDS)
+            //            output.offer(mutProgram.getOrElseUpdate(p, 0), 3, TimeUnit.SECONDS)
             outputs += getParamValue(p, modP1)
-//            outputs += mutProgram.getOrElseUpdate(p, 0)
+            //            outputs += mutProgram.getOrElseUpdate(p, 0)
             pointer += 1
           case 5 =>
             val modP1 = op % 1000 / 100
@@ -544,7 +560,7 @@ object Day9 extends App {
             val v1 = getParamValue(p1, modP1)
             val v2 = getParamValue(p2, modP2)
             val updatePosition = if (modP3 == 2) p3 + relativeBase else p3
-            if(v1 < v2) mutProgram.update(updatePosition, 1)
+            if (v1 < v2) mutProgram.update(updatePosition, 1)
             else mutProgram.update(updatePosition, 0)
             pointer += 1
           case 8 =>
@@ -560,7 +576,7 @@ object Day9 extends App {
             val v1 = getParamValue(p1, modP1)
             val v2 = getParamValue(p2, modP2)
             val updatePosition = if (modP3 == 2) p3 + relativeBase else p3
-            if(v1 == v2) mutProgram.update(updatePosition, 1)
+            if (v1 == v2) mutProgram.update(updatePosition, 1)
             else mutProgram.update(updatePosition, 0)
             pointer += 1
           case 9 =>
@@ -580,11 +596,13 @@ object Day9 extends App {
 
   import scala.concurrent.ExecutionContext.Implicits.global
   import scala.concurrent.duration._
+
   def toMutableMap(l: List[Int]) = {
-    mutable.Map.from(l.zipWithIndex.map{
+    mutable.Map.from(l.zipWithIndex.map {
       case (v, idx) => (BigInt(idx), BigInt(v))
     })
   }
+
   val l1 = List(109, -1, 4, 1, 99)
   println(compute(toMutableMap(l1))(null))
   val l2 = List(109, -1, 104, 1, 99)
@@ -602,13 +620,13 @@ object Day9 extends App {
   val f1 = Future(compute(toMutableMap(l7))(i7))
   i7.put(10)
   println(Await.result(f1, 10.seconds))
-  val l8= List(109, 1, 203, 2, 204, 2, 99)
+  val l8 = List(109, 1, 203, 2, 204, 2, 99)
   val i8 = new SynchronousQueue[BigInt]()
   val f2 = Future(compute(toMutableMap(l8))(i8))
   i8.put(111)
   println(Await.result(f2, 10.seconds))
   val source = Source.fromFile("input9").getLines().flatMap(_.split(',')).toList
-  val memory = mutable.Map.from(source.zipWithIndex.map{
+  val memory = mutable.Map.from(source.zipWithIndex.map {
     case (v, idx) => (BigInt(idx), BigInt(v))
   })
   val input = new SynchronousQueue[BigInt]()
@@ -616,4 +634,48 @@ object Day9 extends App {
   input.put(2)
   val result = Await.result(f, 1.minute)
   println(result)
+}
+
+object Day10 extends App {
+
+  case class Asteroid(x: Int, y: Int)
+  case class Slop(dx: Double, dy: Double)
+  implicit val ordering: Ordering[Slop] = new Ordering[Slop] {
+    override def compare(x: Slop, y: Slop): Int =
+      if (x.dx > y.dx) {
+        -1
+      } else if (x.dx == y.dx) {
+        if (x.dx > 0) x.dy.compare(y.dy)
+        else -x.dy.compare(y.dy)
+      } else {
+        1
+      }
+  }
+
+  val source = Source.fromFile("input10").getLines().toList
+  val asteroids = source.zipWithIndex.flatMap {
+    case (l, y) =>
+      l.toCharArray.zipWithIndex.collect {
+        case (c, x) if c == '#' =>
+          Asteroid(x, y)
+      }
+  }.toSet
+  def slop(a: Asteroid, b: Asteroid): (Slop, Double) = {
+    val dy: Double = a.y - b.y
+    val dx: Double = a.x - b.x
+    if(dy == 0) (Slop(dx / dx.abs, 0), dx.abs)
+    else if(dx == 0) (Slop(0, dy / dy.abs), dy.abs)
+    else {
+      (Slop(dx / dx.abs, dy / dx.abs), math.sqrt(dx * dx + dy * dy))
+    }
+  }
+  val station = asteroids.map{ a =>
+    (asteroids - a).map{x =>
+      val (s, dist) = slop(x, a)
+      (s, (dist, x))
+    }.groupBy(_._1).view.mapValues(_.toList.map(_._2).sortBy(_._1))
+  }.maxBy(_.size)
+  val sortedStation = station.toList.sortBy(_._1)
+
+  println(sortedStation.size)
 }
