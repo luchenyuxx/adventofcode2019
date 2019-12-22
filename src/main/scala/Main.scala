@@ -445,25 +445,26 @@ object Day9 extends App {
   import util.control.Breaks._
   import scala.collection.mutable
 
-  def compute(mutProgram: mutable.ListBuffer[BigInt])
-             (input: SynchronousQueue[BigInt], output: SynchronousQueue[BigInt]): ListBuffer[BigInt] = {
-    var pointer = 0
-    var relativeBase = 0
+  def compute(mutProgram: mutable.Map[BigInt, BigInt])
+             (input: SynchronousQueue[BigInt]): ListBuffer[BigInt] = {
+    var pointer: BigInt = 0
+    var relativeBase: BigInt = 0
     val outputs: ListBuffer[BigInt] = mutable.ListBuffer[BigInt]()
     def getParamValue(param: BigInt, mode: BigInt): BigInt = {
-      mode match {
-        case 0 => mutProgram(param)
+      mode.toInt match {
+        case 0 => mutProgram.getOrElseUpdate(param, 0)
         case 1 => param
-        case 2 => mutProgram(relativeBase + param)
+        case 2 => mutProgram.getOrElseUpdate(relativeBase + param, 0)
       }
     }
     breakable {
-      while (pointer < mutProgram.size) {
+      while (true) {
         val op = mutProgram(pointer)
-        op%100 match {
+        (op%100).toInt match {
           case 1 =>
             val modP1 = op % 1000 / 100
             val modP2 = op % 10000 / 1000
+            val modP3 = op % 100000 / 10000
             pointer += 1
             val p1 = mutProgram(pointer)
             pointer += 1
@@ -472,11 +473,13 @@ object Day9 extends App {
             val p3 = mutProgram(pointer)
             val v1 = getParamValue(p1, modP1)
             val v2 = getParamValue(p2, modP2)
-            mutProgram.update(p3, v1 + v2)
+            val updatePosition = if (modP3 == 2) p3 + relativeBase else p3
+            mutProgram.update(updatePosition, v1 + v2)
             pointer += 1
           case 2 =>
             val modP1 = op % 1000 / 100
             val modP2 = op % 10000 / 1000
+            val modP3 = op % 100000 / 10000
             pointer += 1
             val p1 = mutProgram(pointer)
             pointer += 1
@@ -485,19 +488,25 @@ object Day9 extends App {
             val p3 = mutProgram(pointer)
             val v1 = getParamValue(p1, modP1)
             val v2 = getParamValue(p2, modP2)
-            mutProgram.update(p3, v1 * v2)
+            val updatePosition = if (modP3 == 2) p3 + relativeBase else p3
+            mutProgram.update(updatePosition, v1 * v2)
             pointer += 1
           case 3 =>
+            val modP1 = op % 1000 / 100
             pointer += 1
             val p = mutProgram(pointer)
-            val v = input.take()
-            mutProgram.update(p, v)
+            val i = input.take()
+//            val v = getParamValue(p, modP1)
+            val updatePosition = if (modP1 == 2) p + relativeBase else p
+            mutProgram.update(updatePosition, i)
             pointer += 1
           case 4 =>
+            val modP1 = op % 1000 / 100
             pointer += 1
             val p = mutProgram(pointer)
-            output.offer(mutProgram(p), 3, TimeUnit.SECONDS)
-            outputs += mutProgram(p)
+//            output.offer(mutProgram.getOrElseUpdate(p, 0), 3, TimeUnit.SECONDS)
+            outputs += getParamValue(p, modP1)
+//            outputs += mutProgram.getOrElseUpdate(p, 0)
             pointer += 1
           case 5 =>
             val modP1 = op % 1000 / 100
@@ -525,6 +534,7 @@ object Day9 extends App {
           case 7 =>
             val modP1 = op % 1000 / 100
             val modP2 = op % 10000 / 1000
+            val modP3 = op % 100000 / 10000
             pointer += 1
             val p1 = mutProgram(pointer)
             pointer += 1
@@ -533,12 +543,14 @@ object Day9 extends App {
             val p3 = mutProgram(pointer)
             val v1 = getParamValue(p1, modP1)
             val v2 = getParamValue(p2, modP2)
-            if(v1 < v2) mutProgram.update(p3, 1)
-            else mutProgram.update(p3, 0)
+            val updatePosition = if (modP3 == 2) p3 + relativeBase else p3
+            if(v1 < v2) mutProgram.update(updatePosition, 1)
+            else mutProgram.update(updatePosition, 0)
             pointer += 1
           case 8 =>
             val modP1 = op % 1000 / 100
             val modP2 = op % 10000 / 1000
+            val modP3 = op % 100000 / 10000
             pointer += 1
             val p1 = mutProgram(pointer)
             pointer += 1
@@ -547,8 +559,9 @@ object Day9 extends App {
             val p3 = mutProgram(pointer)
             val v1 = getParamValue(p1, modP1)
             val v2 = getParamValue(p2, modP2)
-            if(v1 == v2) mutProgram.update(p3, 1)
-            else mutProgram.update(p3, 0)
+            val updatePosition = if (modP3 == 2) p3 + relativeBase else p3
+            if(v1 == v2) mutProgram.update(updatePosition, 1)
+            else mutProgram.update(updatePosition, 0)
             pointer += 1
           case 9 =>
             val modP1 = op % 1000 / 100
@@ -564,4 +577,43 @@ object Day9 extends App {
 
     outputs
   }
+
+  import scala.concurrent.ExecutionContext.Implicits.global
+  import scala.concurrent.duration._
+  def toMutableMap(l: List[Int]) = {
+    mutable.Map.from(l.zipWithIndex.map{
+      case (v, idx) => (BigInt(idx), BigInt(v))
+    })
+  }
+  val l1 = List(109, -1, 4, 1, 99)
+  println(compute(toMutableMap(l1))(null))
+  val l2 = List(109, -1, 104, 1, 99)
+  println(compute(toMutableMap(l2))(null))
+  val l3 = List(109, -1, 204, 1, 99)
+  println(compute(toMutableMap(l3))(null))
+  val l4 = List(109, 1, 9, 2, 204, -6, 99)
+  println(compute(toMutableMap(l4))(null))
+  val l5 = List(109, 1, 109, 9, 204, -6, 99)
+  println(compute(toMutableMap(l5))(null))
+  val l6 = List(109, 1, 209, -1, 204, -106, 99)
+  println(compute(toMutableMap(l6))(null))
+  val l7 = List(109, 1, 3, 3, 204, 2, 99)
+  val i7 = new SynchronousQueue[BigInt]()
+  val f1 = Future(compute(toMutableMap(l7))(i7))
+  i7.put(10)
+  println(Await.result(f1, 10.seconds))
+  val l8= List(109, 1, 203, 2, 204, 2, 99)
+  val i8 = new SynchronousQueue[BigInt]()
+  val f2 = Future(compute(toMutableMap(l8))(i8))
+  i8.put(111)
+  println(Await.result(f2, 10.seconds))
+  val source = Source.fromFile("input9").getLines().flatMap(_.split(',')).toList
+  val memory = mutable.Map.from(source.zipWithIndex.map{
+    case (v, idx) => (BigInt(idx), BigInt(v))
+  })
+  val input = new SynchronousQueue[BigInt]()
+  val f = Future(compute(memory)(input))
+  input.put(2)
+  val result = Await.result(f, 1.minute)
+  println(result)
 }
