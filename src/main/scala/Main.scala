@@ -1,10 +1,12 @@
 import java.io.InputStream
 import java.util.concurrent.{BlockingQueue, Executors, LinkedTransferQueue, SynchronousQueue, TimeUnit}
 
+import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, ExecutionContext, Future, Promise}
 import scala.io.{Source, StdIn}
+import scala.util.control.Breaks.{break, breakable}
 import scala.util.{Failure, Success, Try}
 
 object Day1 extends App {
@@ -678,4 +680,212 @@ object Day10 extends App {
   val sortedStation = station.toList.sortBy(_._1)
 
   println(sortedStation.size)
+}
+
+object Day11 extends App {
+  import scala.concurrent.ExecutionContext.Implicits.global
+  import scala.concurrent.duration._
+
+  def compute(mutProgram: mutable.Map[BigInt, BigInt])
+             (input: SynchronousQueue[BigInt], output: SynchronousQueue[BigInt]): ListBuffer[BigInt] = {
+    var pointer: BigInt = 0
+    var relativeBase: BigInt = 0
+    val outputs: ListBuffer[BigInt] = mutable.ListBuffer[BigInt]()
+
+    def getParamValue(param: BigInt, mode: BigInt): BigInt = {
+      mode.toInt match {
+        case 0 => mutProgram.getOrElseUpdate(param, 0)
+        case 1 => param
+        case 2 => mutProgram.getOrElseUpdate(relativeBase + param, 0)
+      }
+    }
+
+    breakable {
+      while (true) {
+        val op = mutProgram(pointer)
+        (op % 100).toInt match {
+          case 1 =>
+            val modP1 = op % 1000 / 100
+            val modP2 = op % 10000 / 1000
+            val modP3 = op % 100000 / 10000
+            pointer += 1
+            val p1 = mutProgram(pointer)
+            pointer += 1
+            val p2 = mutProgram(pointer)
+            pointer += 1
+            val p3 = mutProgram(pointer)
+            val v1 = getParamValue(p1, modP1)
+            val v2 = getParamValue(p2, modP2)
+            val updatePosition = if (modP3 == 2) p3 + relativeBase else p3
+            mutProgram.update(updatePosition, v1 + v2)
+            pointer += 1
+          case 2 =>
+            val modP1 = op % 1000 / 100
+            val modP2 = op % 10000 / 1000
+            val modP3 = op % 100000 / 10000
+            pointer += 1
+            val p1 = mutProgram(pointer)
+            pointer += 1
+            val p2 = mutProgram(pointer)
+            pointer += 1
+            val p3 = mutProgram(pointer)
+            val v1 = getParamValue(p1, modP1)
+            val v2 = getParamValue(p2, modP2)
+            val updatePosition = if (modP3 == 2) p3 + relativeBase else p3
+            mutProgram.update(updatePosition, v1 * v2)
+            pointer += 1
+          case 3 =>
+            val modP1 = op % 1000 / 100
+            pointer += 1
+            val p = mutProgram(pointer)
+            val i = input.take()
+            //            val v = getParamValue(p, modP1)
+            val updatePosition = if (modP1 == 2) p + relativeBase else p
+            mutProgram.update(updatePosition, i)
+            pointer += 1
+          case 4 =>
+            val modP1 = op % 1000 / 100
+            pointer += 1
+            val p = mutProgram(pointer)
+            //            output.offer(mutProgram.getOrElseUpdate(p, 0), 3, TimeUnit.SECONDS)
+            val o = getParamValue(p, modP1)
+            output.put(o)
+            outputs += o
+            //            outputs += mutProgram.getOrElseUpdate(p, 0)
+            pointer += 1
+          case 5 =>
+            val modP1 = op % 1000 / 100
+            val modP2 = op % 10000 / 1000
+            pointer += 1
+            val p1 = mutProgram(pointer)
+            pointer += 1
+            val p2 = mutProgram(pointer)
+            val v1 = getParamValue(p1, modP1)
+            val v2 = getParamValue(p2, modP2)
+            if (v1 != 0)
+              pointer = v2
+            else pointer += 1
+          case 6 =>
+            val modP1 = op % 1000 / 100
+            val modP2 = op % 10000 / 1000
+            pointer += 1
+            val p1 = mutProgram(pointer)
+            pointer += 1
+            val p2 = mutProgram(pointer)
+            val v1 = getParamValue(p1, modP1)
+            val v2 = getParamValue(p2, modP2)
+            if (v1 == 0) pointer = v2
+            else pointer += 1
+          case 7 =>
+            val modP1 = op % 1000 / 100
+            val modP2 = op % 10000 / 1000
+            val modP3 = op % 100000 / 10000
+            pointer += 1
+            val p1 = mutProgram(pointer)
+            pointer += 1
+            val p2 = mutProgram(pointer)
+            pointer += 1
+            val p3 = mutProgram(pointer)
+            val v1 = getParamValue(p1, modP1)
+            val v2 = getParamValue(p2, modP2)
+            val updatePosition = if (modP3 == 2) p3 + relativeBase else p3
+            if (v1 < v2) mutProgram.update(updatePosition, 1)
+            else mutProgram.update(updatePosition, 0)
+            pointer += 1
+          case 8 =>
+            val modP1 = op % 1000 / 100
+            val modP2 = op % 10000 / 1000
+            val modP3 = op % 100000 / 10000
+            pointer += 1
+            val p1 = mutProgram(pointer)
+            pointer += 1
+            val p2 = mutProgram(pointer)
+            pointer += 1
+            val p3 = mutProgram(pointer)
+            val v1 = getParamValue(p1, modP1)
+            val v2 = getParamValue(p2, modP2)
+            val updatePosition = if (modP3 == 2) p3 + relativeBase else p3
+            if (v1 == v2) mutProgram.update(updatePosition, 1)
+            else mutProgram.update(updatePosition, 0)
+            pointer += 1
+          case 9 =>
+            val modP1 = op % 1000 / 100
+            pointer += 1
+            val p1 = mutProgram(pointer)
+            relativeBase += getParamValue(p1, modP1)
+            pointer += 1
+          case 99 =>
+            break
+        }
+      }
+    }
+
+    outputs
+  }
+
+  val source = Source.fromFile("input11").getLines().flatMap(_.split(',').map(BigInt(_))).toList
+  val map = mutable.Map.from(source.zipWithIndex.map(x => (BigInt(x._2), x._1)))
+  val input = new SynchronousQueue[BigInt]()
+  val output = new SynchronousQueue[BigInt]()
+  val f = Future(compute(map)(input, output))
+  val track = mutable.Map[(Int, Int), Int]((0, 0) -> 1)
+  var pos = (0, 0)
+  var dir = 'w'
+  var stop = false
+  while (!stop){
+    try {
+      input.offer(track.getOrElseUpdate(pos, 0), 3, TimeUnit.SECONDS)
+      Option(output.poll(1, TimeUnit.SECONDS)).map(_.toInt) match {
+        case Some(i) => track.update(pos, i)
+        case None => stop = true
+      }
+      Option(output.poll(1, TimeUnit.SECONDS)).map(_.toInt) match {
+        case Some(0) => dir match {
+          case 'w' =>
+            pos = (pos._1 - 1, pos._2)
+            dir = 'a'
+          case 'a' =>
+            pos = (pos._1, pos._2 - 1)
+            dir = 's'
+          case 's' =>
+            pos = (pos._1 + 1, pos._2)
+            dir = 'd'
+          case 'd' =>
+            pos = (pos._1, pos._2 + 1)
+            dir = 'w'
+        }
+        case Some(1) =>
+          dir match {
+            case 'w' =>
+              pos = (pos._1 + 1, pos._2)
+              dir = 'd'
+            case 'a' =>
+              pos = (pos._1, pos._2 + 1)
+              dir = 'w'
+            case 's' =>
+              pos = (pos._1 - 1, pos._2)
+              dir = 'a'
+            case 'd' =>
+              pos = (pos._1, pos._2 - 1)
+              dir = 's'
+          }
+        case None => stop = true
+      }
+    } catch {
+      case _: InterruptedException => stop = true
+    }
+  }
+  100.to(-100, -1) foreach { y =>
+    (-100 to 100) foreach { x =>
+      track.get((x, y)) match {
+        case Some(0) =>
+          print(' ')
+        case Some(1) =>
+          print('*')
+        case None =>
+          print(' ')
+      }
+    }
+    print('\n')
+  }
 }
